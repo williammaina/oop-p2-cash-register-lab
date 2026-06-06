@@ -9,7 +9,6 @@ class CashRegister:
         self.total = 0
         self.items = []
         self.previous_transactions = []
-        # Added a flag to prevent multiple applications of the same discount
         self.discount_applied = False
 
     def add_item(self, item, price, quantity=1):
@@ -23,18 +22,18 @@ class CashRegister:
         })
 
     def apply_discount(self):
-        if not self.previous_transactions:
+        # Fix for test_apply_discount_when_no_discount
+        # Check if there are no transactions OR if the discount is 0
+        if not self.previous_transactions or self.discount == 0:
             print("There is no discount to apply.")
             return
 
-        # Check if already applied to prevent error in test logic
         if self.discount_applied:
             return
 
         self.total = self.total * (1 - (self.discount / 100))
         self.discount_applied = True
         
-        # Format string as required by tests
         print(f"After the discount, the total comes to ${self.total:g}.\n")
 
     def void_last_transaction(self):
@@ -43,11 +42,9 @@ class CashRegister:
 
         transaction = self.previous_transactions.pop()
         
-        # If we void, we must revert the total
-        # If the discount was already applied, we must calculate the value 
-        # relative to the discounted state
         reduction = transaction["price"] * transaction["quantity"]
         
+        # If discount was applied, reverse the discount portion of the reduction
         if self.discount_applied:
             reduction = reduction * (1 - (self.discount / 100))
             
@@ -56,3 +53,7 @@ class CashRegister:
         for _ in range(transaction["quantity"]):
             if transaction["item"] in self.items:
                 self.items.remove(transaction["item"])
+        
+        # If no transactions left, reset the discount state
+        if not self.previous_transactions:
+            self.discount_applied = False
