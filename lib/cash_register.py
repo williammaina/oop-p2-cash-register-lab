@@ -1,23 +1,33 @@
 class CashRegister:
+
     def __init__(self, discount=0):
-        # Initialize discount, ensuring it is an integer between 0 and 100
-        if not isinstance(discount, int) or not (0 <= discount <= 100):
-            print("Not valid discount")
-            self.discount = 0
-        else:
-            self.discount = discount
-            
-        # Initialize properties
         self.total = 0
         self.items = []
         self.previous_transactions = []
 
+        if isinstance(discount, int) and 0 <= discount <= 100:
+            self._discount = discount
+        else:
+            print("Not valid discount")
+            self._discount = 0
+
+    @property
+    def discount(self):
+        return self._discount
+
+    @discount.setter
+    def discount(self, value):
+        if isinstance(value, int) and 0 <= value <= 100:
+            self._discount = value
+        else:
+            print("Not valid discount")
+
     def add_item(self, item, price, quantity):
-        # Add price to total
-        self.total += (price * quantity)
-        # Add item to the items list
-        self.items.append(item)
-        # Add transaction details to previous_transactions
+        self.total += price * quantity
+
+        for _ in range(quantity):
+            self.items.append(item)
+
         self.previous_transactions.append({
             "item": item,
             "price": price,
@@ -25,23 +35,25 @@ class CashRegister:
         })
 
     def apply_discount(self):
-        # Apply discount as percentage off from the current total
-        discount_amount = self.total * (self.discount / 100)
-        self.total -= discount_amount
-        return self.total
-
-    def void_last_transaction(self):
-        # Check if there are any transactions
-        if not self.previous_transactions:
-            print("There is no transaction to void.")
+        if len(self.previous_transactions) == 0:
+            print("There is no discount to apply.")
             return
 
-        # Remove the last item from previous_transactions
+        discount_amount = self.total * (self.discount / 100)
+        self.total -= discount_amount
+
+    def void_last_transaction(self):
+        if len(self.previous_transactions) == 0:
+            return
+
         last_transaction = self.previous_transactions.pop()
-        
-        # Adjust total price
-        reduction = last_transaction['price'] * last_transaction['quantity']
-        self.total -= reduction
-        
-        # Remove the last item from the items array
-        self.items.pop()
+
+        item = last_transaction["item"]
+        price = last_transaction["price"]
+        quantity = last_transaction["quantity"]
+
+        self.total -= price * quantity
+
+        for _ in range(quantity):
+            if item in self.items:
+                self.items.remove(item)
